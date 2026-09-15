@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <title>10-Day Spain Itinerary - Pitres en España</title>
+ 
+<!-- Leaflet CSS & MapLibre GL CSS -->
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+ <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.css" crossorigin="" />
+ 
+<!-- Google Fonts -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=IM+Fell+English:ital@0;1&family=Pinyon+Script&display=swap" rel="stylesheet">
+ 
+<!-- Google Maps API with Places Library -->
+ <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places" async defer></script>
+
+ <style>
+ :root {
+ --notebook-bg: rgba(252, 250, 244, 0.98);
+ --notebook-border: rgba(184, 81, 46, 0.35);
+ --text-main: #1d1613;
+ --text-muted: #52443a;
+ --accent-terracotta: #b8512e;
+ --accent-olive: #495837;
+ --flat-gold: #f4d068;
+
+ --font-heading: 'Cinzel', 'IM Fell English', serif;
+ --font-body: 'Cormorant Garamond', 'Georgia', serif;
+ --font-title-script: 'Great Vibes', 'Pinyon Script', cursive;
+ }
+
+ body, html {
+ margin: 0;
+ padding: 0;
+ font-family: var(--font-body);
+ background-color: #f3f3f3; 
+ overflow: hidden; 
+ height: 100vh;
+ width: 100vw;
+ -webkit-tap-highlight-color: transparent;
+ }
+
+ #map {
+ position: absolute;
+ top: 0;
+ left: 0;
+ width: 100vw;
+ height: 100vh;
+ z-index: 1;
+ background: #e1d8c9;
+ cursor: grab;
+ }
+
+ #map:active {
+ cursor: grabbing;
+ }
+
+ .leaflet-control-attribution,
+ .esri-truncated-attribution {
+ display: none !important;
+ }
+
+ .itinerary-wrapper {
+ position: absolute;
+ top: 20px;
+ left: 20px;
+ width: 460px;
+ height: calc(100vh - 40px);
+ z-index: 10;
+ display: flex;
+ flex-direction: column;
+ }
+
+ .overlay-header {
+ position: relative;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ background: linear-gradient(135deg, #b8512e 0%, #963f21 100%);
+ border: 2px solid rgba(255, 255, 255, 0.25);
+ border-radius: 14px;
+ padding: 20px;
+ box-sizing: border-box;
+ box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+ z-index: 20;
+ flex-shrink: 0;
+ cursor: pointer;
+ }
+
+ .overlay-header:hover {
+ filter: brightness(1.04);
+ }
+
+ .mobile-drag-handle {
+ display: none;
+ width: 38px;
+ height: 4px;
+ background-color: rgba(255, 255, 255, 0.5);
+ border-radius: 2px;
+ margin-bottom: 8px;
+ }
+
+ .itinerary-wrapper.is-hero .overlay-header {
+ height: 100%;
+ margin-bottom: 0;
+ padding: 50px 30px;
+ border-radius: 14px;
+ }
+
+ .itinerary-wrapper.is-hero .gold-title {
+ font-size: 4rem;
+ text-shadow: 0 3px 12px rgba(0,0,0,0.3);
+ }
+
+ .hero-subtitle {
+ font-family: var(--font-heading);
+ color: rgba(244, 208, 104, 0.95);
+ font-size: 1rem;
+ letter-spacing: 2.5px;
+ text-transform: uppercase;
+ margin-top: 14px;
+ text-align: center;
+ transition: opacity 0.3s ease;
+ }
+
+ .scroll-hint {
+ font-family: var(--font-body);
+ color: var(--flat-gold);
+ font-size: 1.15rem;
+ margin-top: 40px;
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ animation: pulse-bounce 2s infinite;
+ font-style: italic;
+ }
+
+ @keyframes pulse-bounce {
+ 0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+ 40% { transform: translateY(-6px); }
+ 60% { transform: translateY(-3px); }
+ }
+
+ .itinerary-wrapper.collapsed .overlay-header {
+ height: 45px;
+ margin-bottom: 0;
+ padding: 6px 15px;
+ border-radius: 12px 12px 0 0;
+ border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+ background: linear-gradient(90deg, #b8512e 0%, #a24424 100%);
+ justify-content: center !important;
+ }
+
+ .itinerary-wrapper.collapsed .gold-title {
+ font-size: 1.7rem;
+ }
+
+ .itinerary-wrapper.collapsed .hero-subtitle,
+ .itinerary-wrapper.collapsed .scroll-hint,
+ .itinerary-wrapper.collapsed .mobile-drag-handle {
+ display: none !important;
+ }
+
+ .gold-title {
+ font-family: var(--font-title-script);
+ font-weight: 400;
+ letter-spacing: 1px;
+ color: var(--flat-gold);
+ margin: 0;
+ text-align: center;
+ line-height: 1.1;
+ }
+
+ .notebook-body {
+ position: relative;
+ background-color: var(--notebook-bg);
+ backdrop-filter: blur(12px);
+ -webkit-backdrop-filter: blur(12px);
+ border: 1px solid var(--notebook-border);
+ border-top: none;
+ border-radius: 0 0 14px 14px;
+ overflow: visible;
+ flex: 1;
+ box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 4px 0 16px rgba(184, 81, 46, 0.18);
+ box-sizing: border-box;
+ display: flex;
+ opacity: 0;
+ pointer-events: none;
+ transition: opacity 0.4s ease;
+ }
+
+ .itinerary-wrapper.collapsed .notebook-body {
+ opacity: 1;
+ pointer-events: auto;
+ }
+
+ .itinerary-wrapper.is-hero .notebook-body {
+ height: 0;
+ overflow: hidden;
+ }
+
+ .notebook-page-content {
+ flex: 1;
+ padding: 28px 48px 28px 48px;
+ overflow-y: auto;
+ overflow-x: hidden;
+ display: flex;
+ flex-direction: column;
+ box-sizing: border-box;
+ scroll-behavior: smooth;
+ scrollbar-width: thin;
+ scrollbar-color: var(--notebook-border) transparent;
+ border-radius: 0 0 14px 14px;
+ background-color: var(--notebook-bg);
+ background-image: 
+ linear-gradient(90deg, rgba(184, 81, 46, 0.35) 0px, rgba(184, 81, 46, 0.35) 2px, transparent 2px, transparent 40px),
+ repeating-linear-gradient(
+ 0deg,
+ transparent,
+ transparent 27px,
+ rgba(73, 88, 55, 0.15) 27px,
+ rgba(73, 88, 55, 0.15) 28px
+ );
+ background-size: 100% 28px;
+ background-attachment: local;
+ }
+
+ .notebook-page-content::-webkit-scrollbar {
+ width: 5px;
+ }
+ .notebook-page-content::-webkit-scrollbar-thumb {
+ background-color: var(--notebook-border);
+ border-radius: 4px;
+ }
+
+ .day-panel {
+ display: none;
+ flex-direction: column;
+ flex: 1;
+ min-height: 100%;
+ height: auto;
+ box-sizing: border-box;
+ animation: fadeInPage 0.35s ease forwards;
+ }
+
+ .day-panel.is-active {
+ display: flex;
+ }
+
+ @keyframes fadeInPage {
+ from { opacity: 0; transform: translateY(4px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+
+ .day-panel h2 {
+ font-family: var(--font-heading);
+ font-size: 1.2rem;
+ color: var(--text-main);
+ margin: 0 0 28px 0;
+ line-height: 28px;
+ font-weight: 700;
+ border-bottom: 2px solid var(--notebook-border);
+ padding-bottom: 0px;
+ letter-spacing: 0.4px;
+ flex-shrink: 0;
+ text-align: center;
+ }
+
+ /* --- DAY 10 GRID SPACING ALIGNMENT --- */
+ #panel-10 h2 {
+ margin-bottom: 28px !important;
+ }
+ #panel-10 .day-section {
+ margin-bottom: 28px !important;
+ }
+
+ .day-section {
+ margin-bottom: 28px;
+ font-size: 1.05rem;
+ line-height: 28px;
+ flex-shrink: 0;
+ text-align: left;
+ }
+
+ .day-section p {
+ margin: 0;
+ color: var(--text-main);
+ font-weight: 600;
+ line-height: 28px;
+ text-align: left;
+ }
+
+ .day-section strong {
+ font-family: var(--font-heading);
+ color: var(--text-muted);
+ display: block;
+ font-size: 0.75rem;
+ text-transform: uppercase;
+ letter-spacing: 1.2px;
+ font-weight: 700;
+ line-height: 28px;
+ margin: 0;
+ padding: 0;
+ text-align: left;
+ }
+
+ .day-section ul {
+ margin: 0;
+ padding-left: 20px;
+ color: var(--text-main);
+ list-style-type: disc;
+ text-align: left;
+ }
+
+ .highlight-item {
+ margin: 0;
+ padding: 0;
+ line-height: 28px;
+ cursor: pointer;
+ transition: color 0.2s ease, font-weight 0.2s ease;
+ font-size: 1.02rem;
+ font-weight: 600;
+ color: var(--text-main);
+ text-align: left;
+ }
+
+ .highlight-item:hover, .highlight-item:active {
+ color: var(--accent-terracotta);
+ text-decoration: underline;
+ text-underline-offset: 3px;
+ }
+
+ .highlight-item.is-selected {
+ color: var(--accent-terracotta);
+ font-weight: 700;
+ text-decoration: underline;
+ }
+
+ .highlight-item::marker {
+ color: var(--accent-olive);
+ font-size: 1.1em;
+ }
+
+ .photo-preview-container {
+ margin-top: 16px;
+ padding-top: 12px;
+ border-top: 1px dashed var(--notebook-border);
+ display: flex;
+ flex-direction: column;
+ flex: 1;
+ transition: opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+ overflow: hidden;
+ align-items: center;
+ width: 100%;
+ }
+
+ .photo-card {
+ background: rgba(255, 255, 255, 0.7);
+ border: 1px solid var(--notebook-border);
+ border-radius: 8px;
+ overflow: hidden;
+ text-align: center;
+ flex: 1;
+ width: 100%;
+ max-width: none;
+ margin-left: 0;
+ margin-right: 0;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ align-items: center;
+ position: relative;
+ min-height: 160px;
+ }
+
+ .photo-card img {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+ display: none;
+ }
+
+ .photo-placeholder {
+ font-family: var(--font-body);
+ font-size: 0.85rem;
+ color: var(--text-muted);
+ padding: 10px;
+ font-style: italic;
+ }
+
+ .photo-caption {
+ font-family: var(--font-heading);
+ font-size: 0.75rem;
+ font-weight: 700;
+ color: var(--text-main);
+ padding: 6px 10px;
+ background: rgba(252, 250, 244, 0.96);
+ width: 100%;
+ box-sizing: border-box;
+ border-top: 1px solid rgba(184, 81, 46, 0.3);
+ display: none;
+ position: absolute;
+ bottom: 0;
+ left: 0;
+ letter-spacing: 0.5px;
+ }
+
+ @media (max-height: 780px) {
+ .photo-preview-container {
+ max-height: 0;
+ opacity: 0;
+ padding-top: 0;
+ margin-top: 0;
+ border-top: none;
+ pointer-events: none;
+ }
+ }
+
+ .notebook-tabs {
+ position: absolute;
+ right: -45px;
+ top: 16px;
+ bottom: 16px;
+ width: 45px;
+ display: flex;
+ flex-direction: column;
+ justify-content: space-between;
+ padding: 0;
+ z-index: 25;
+ box-sizing: border-box;
+ gap: 2px;
+ }
+
+ .index-tab {
+ width: 45px;
+ flex: 1;
+ background-color: #f0ede4;
+ color: var(--text-muted);
+ font-family: var(--font-heading);
+ font-size: 0.7rem;
+ font-weight: 600;
+ border-radius: 0 6px 6px 0;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ box-shadow: 4px 2px 10px rgba(184, 81, 46, 0.15);
+ transition: background-color 0.2s ease, color 0.2s ease;
+ border-top: 1px solid var(--notebook-border);
+ border-right: 1px solid var(--notebook-border);
+ border-bottom: 1px solid var(--notebook-border);
+ border-left: none;
+ text-decoration: none;
+ letter-spacing: 0.2px;
+ position: relative;
+ }
+
+ .index-tab:hover {
+ background-color: #e6e2d8;
+ color: var(--accent-terracotta);
+ }
+
+ .index-tab.is-active-tab {
+ background-color: #fcfaf4;
+ color: var(--accent-terracotta);
+ font-weight: 700;
+ border-left: none;
+ border-top: 1px solid var(--notebook-border);
+ border-bottom: 1px solid var(--notebook-border);
+ border-right: 1px solid var(--notebook-border);
+ box-shadow: none;
+ position: relative;
+ left: -1px;
+ width: 46px;
+ z-index: 30;
+ }
+
+ .custom-compact-icon {
+ background: transparent;
+ border: none;
+ }
+
+ .compact-marker-node {
+ position: relative;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ pointer-events: auto !important;
+ transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+ }
+
+ .compact-marker-node.is-faded {
+ opacity: 0.45;
+ z-index: 100;
+ }
+
+ .compact-marker-node.is-day-unselected {
+ opacity: 0.75;
+ z-index: 500;
+ }
+
+ .compact-marker-node.is-day-all {
+ opacity: 1;
+ z-index: 800;
+ }
+
+ .compact-marker-node.is-active {
+ opacity: 1 !important;
+ z-index: 1000;
+ }
+
+ .marker-dot-pin {
+ width: 16px;
+ height: 16px;
+ background-color: var(--accent-terracotta);
+ border: 2px solid #faf8f2;
+ border-radius: 50%;
+ box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+ box-sizing: border-box;
+ transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
+ }
+
+ .marker-pill-label {
+ position: absolute;
+ bottom: 100%;
+ left: 50%;
+ transform: translateX(-50%) translateY(-6px);
+ font-family: var(--font-heading);
+ font-size: 0.75rem;
+ font-weight: 700;
+ color: var(--text-main);
+ background: rgba(252, 250, 244, 0.96);
+ backdrop-filter: blur(4px);
+ padding: 4px 10px;
+ border-radius: 6px;
+ border: 1px solid var(--notebook-border);
+ box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+ white-space: nowrap;
+ opacity: 0;
+ visibility: hidden;
+ pointer-events: none;
+ transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+ }
+
+ .compact-marker-node:hover .marker-pill-label {
+ opacity: 1;
+ visibility: visible;
+ transform: translateX(-50%) translateY(-10px);
+ }
+
+ .compact-marker-node.is-active .marker-dot-pin {
+ transform: scale(1.6);
+ background-color: var(--accent-terracotta);
+ box-shadow: 0 0 14px rgba(184, 81, 46, 0.9);
+ }
+
+ /* --- RESPONSIVE MOBILE OPTIMIZATIONS --- */
+ @media (max-width: 768px) {
+ body, html {
+ overflow: hidden;
+ }
+
+ #map {
+ position: absolute !important;
+ top: 0 !important;
+ left: 0 !important;
+ width: 100vw !important;
+ height: 100vh !important;
+ z-index: 1;
+ }
+
+ .itinerary-wrapper {
+ position: absolute !important;
+ top: auto !important; 
+ bottom: 20px !important;
+ left: 20px !important;
+ right: 20px !important;
+ width: calc(100vw - 40px) !important;
+ height: 444px !important;
+ max-height: calc(100vh - 60px) !important;
+ margin: 0 !important;
+ padding: 0 !important;
+ display: flex !important;
+ flex-direction: column !important;
+ background: transparent;
+ z-index: 10;
+ }
+
+ .itinerary-wrapper.is-hero, 
+ .itinerary-wrapper.collapsed {
+ height: 444px !important;
+ }
+
+ .itinerary-wrapper.is-hero .overlay-header {
+ height: 100%;
+ width: 100%;
+ padding: 20px 16px;
+ border-radius: 14px;
+ justify-content: center;
+ box-sizing: border-box;
+ }
+
+ .itinerary-wrapper.is-hero .gold-title {
+ font-size: 1.45rem !important;
+ white-space: nowrap !important;
+ }
+
+ .itinerary-wrapper.is-hero .hero-subtitle {
+ font-size: 0.72rem !important;
+ margin-top: 6px;
+ white-space: nowrap !important;
+ }
+
+ .itinerary-wrapper.is-hero .scroll-hint {
+ font-size: 0.85rem;
+ margin-top: 14px;
+ }
+
+ .itinerary-wrapper.is-hero .mobile-drag-handle {
+ display: block;
+ }
+
+ .itinerary-wrapper.is-hero .notebook-body {
+ display: none !important;
+ }
+
+ .itinerary-wrapper.collapsed .overlay-header {
+ height: 40px;
+ min-height: 40px;
+ width: calc(100% - 26px) !important;
+ padding: 4px 14px;
+ border-radius: 14px 14px 0 0 !important;
+ flex-direction: row;
+ justify-content: center !important;
+ align-items: center;
+ border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+ box-sizing: border-box;
+ }
+
+ .itinerary-wrapper.collapsed .gold-title {
+ font-size: 0.95rem !important;
+ white-space: nowrap !important;
+ }
+
+ .itinerary-wrapper.collapsed .hero-subtitle,
+ .itinerary-wrapper.collapsed .scroll-hint,
+ .itinerary-wrapper.collapsed .mobile-drag-handle {
+ display: none !important;
+ }
+
+ .notebook-body {
+ flex: 1;
+ width: calc(100% - 26px) !important;
+ display: flex !important;
+ flex-direction: column !important;
+ border-radius: 0 0 14px 14px !important;
+ border: 1px solid var(--notebook-border) !important;
+ border-top: none !important;
+ box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 4px 0 16px rgba(184, 81, 46, 0.18) !important;
+ background-color: var(--notebook-bg);
+ overflow: visible !important;
+ box-sizing: border-box;
+ }
+
+ .notebook-page-content {
+ flex: 1 !important;
+ padding: 21px 20px 21px 20px !important;
+ border-radius: 0 0 14px 14px !important;
+ background-image: 
+ linear-gradient(90deg, rgba(184, 81, 46, 0.35) 0px, rgba(184, 81, 46, 0.35) 2px, transparent 2px, transparent 40px),
+ repeating-linear-gradient(
+ 0deg,
+ transparent,
+ transparent 20px,
+ rgba(73, 88, 55, 0.15) 20px,
+ rgba(73, 88, 55, 0.15) 21px
+ ) !important;
+ background-size: 100% 21px !important;
+ background-position: 0 0 !important;
+ background-attachment: local !important;
+ overflow-y: auto !important;
+ -webkit-overflow-scrolling: touch;
+ box-sizing: border-box;
+ }
+
+ .day-panel {
+ height: auto !important;
+ min-height: auto !important;
+ flex-shrink: 0 !important;
+ }
+
+ .day-panel h2 {
+ font-size: 0.82rem !important;
+ margin-bottom: 21px;
+ line-height: 21px;
+ white-space: nowrap !important;
+ overflow: hidden !important;
+ text-overflow: ellipsis !important;
+ }
+
+ #panel-10 h2 {
+ margin-bottom: 21px !important;
+ }
+ #panel-10 .day-section {
+ margin-bottom: 21px !important;
+ }
+
+ .day-section {
+ margin-bottom: 21px;
+ font-size: 0.98rem;
+ line-height: 21px;
+ }
+
+ .day-section p, 
+ .day-section strong, 
+ .day-section ul {
+ line-height: 21px;
+ margin: 0;
+ padding: 0;
+ }
+
+ .day-section ul {
+ padding-left: 20px;
+ }
+
+ .highlight-item {
+ font-size: 0.95rem;
+ line-height: 21px;
+ margin: 0;
+ padding: 0;
+ }
+
+ .photo-preview-container {
+ display: none !important;
+ }
+ 
+ .notebook-tabs {
+ right: -26px !important;
+ width: 26px !important;
+ top: 8px !important;
+ bottom: 8px !important;
+ gap: 1px !important;
+ box-sizing: border-box;
+ }
+ 
+ .index-tab {
+ font-size: 0 !important;
+ border-radius: 0 4px 4px 0 !important;
+ width: 26px !important;
+ padding: 0 !important;
+ }
+
+ .index-tab::after {
+ content: attr(data-day);
+ font-size: 0.65rem !important;
+ font-family: var(--font-heading);
+ font-weight: 600;
+ }
+ 
+ .index-tab.is-active-tab {
+ width: 27px !important;
+ }
+ }
+ </style>
+</head>
+<body>
+
+ <div id="map"></div>
+
+ <div class="itinerary-wrapper is-hero" id="itineraryWrapper">
+ <div class="overlay-header" id="overlayHeader" title="Click to open notebook / return to overview">
+ <div class="mobile-drag-handle"></div>
+ <h1 class="gold-title">Pitres en España</h1>
+ <div class="hero-subtitle">10-Day Journey Across Spain</div>
+ <div class="scroll-hint">Tap cover to open notebook <span>→</span></div>
+ </div>
+
+ <div class="notebook-body" id="notebookBody">
+ <div class="notebook-page-content" id="notebookContent">
+ 
+ <!-- Day 1 Panel -->
+ <div class="day-panel is-active" id="panel-1" data-day="1">
+ <h2>Madrid Arrival & Historic Core</h2>
+ <div class="day-section">
+ <p>Arrive in Madrid, check in, and spend a relaxing afternoon adjusting to Spanish time while exploring the vibrant historic core.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(40.4169, -3.7033, 'Puerta del Sol', 1, event, 'https://cdn.sanity.io/images/nxpteyfv/goguides/c1c87b4faaf483c3c3a66a2de9cfc318c959fbd1-1600x1067.jpg')">Puerta del Sol</li>
+ <li class="highlight-item" onclick="focusHighlight(40.4154, -3.7090, 'Mercado de San Miguel', 1, event, 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Mercado_de_San_Miguel_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original')">Mercado de San Miguel</li>
+ <li class="highlight-item" onclick="focusHighlight(40.4180, -3.7143, 'Royal Palace of Madrid', 1, event, 'https://www.spain.info/export/sites/segtur/.content/imagenes/cabeceras-grandes/madrid/palacio-real-madrid-s177969425.jpg')">Royal Palace of Madrid</li>
+ <li class="highlight-item" onclick="focusHighlight(40.4138, -3.6921, 'Museo Nacional del Prado', 1, event, 'https://travel.usnews.com/images/Courtesy_of_Museo_Nacional_del_Pradomuseum-inside-exhibit-art.jpg')">Museo Nacional del Prado</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Casa Mortero</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-1">
+ <span class="photo-placeholder" id="placeholder-1">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-1" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-1"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 2 Panel -->
+ <div class="day-panel" id="panel-2" data-day="2">
+ <h2>Segovia Day Trip</h2>
+ <div class="day-section">
+ <p>A day trip north to Segovia via high-speed rail through the Guadarrama Tunnels to marvel at the Roman aqueduct, explore the fairy-tale Alcázar, and enjoy traditional castilian roast suckling pig.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(40.9481, -4.1181, 'Segovia Aqueduct', 2, event, 'https://media.cntraveler.com/photos/5cf00b6bd3381d773567db0c/16:9/w_2560,c_limit/Aqueduct%20of%20Segovia_GettyImages-1131634877.jpg')">Segovia Aqueduct</li>
+ <li class="highlight-item" onclick="focusHighlight(40.9525, -4.1325, 'Alcázar de Segovia', 2, event, 'https://dotonmap.com/wp-content/uploads/2025/11/alcazar-003.jpg')">Alcázar de Segovia</li>
+ <li class="highlight-item" onclick="focusHighlight(40.9501, -4.1256, 'Catedral de Segovia', 2, event, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRPo7GhGgYQqvIBDhW1dQH13qs6wjgA_VlJaubbNG-sZNz57Qwos00JOj_&s=10')">Catedral de Segovia</li>
+ <li class="highlight-item" onclick="focusHighlight(40.9503, -4.1240, 'El Horno de Segovia', 2, event, 'https://hips.hearstapps.com/hmg-prod/images/asador-maribel-cochinillo-horno-segovia-elle-gourmet-6638c0d149bf3.jpg')">El Horno de Segovia</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Restaurante La Bien Aparecida</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-2">
+ <span class="photo-placeholder" id="placeholder-2">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-2" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-2"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 3 Panel -->
+ <div class="day-panel" id="panel-3" data-day="3">
+ <h2>Madrid Fine Arts & Parks</h2>
+ <div class="day-section">
+ <p>Immerse in world-class art at Reina Sofía before strolling through the lush gardens and iconic Crystal Palace in El Retiro Park.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(40.4082, -3.6944, 'Reina Sofía Museum', 3, event, 'https://res.klook.com/images/fl_lossy.progressive,q_65/c_fill,w_1295,h_971/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/fdxaqbx3u0unfrdtih4i/Madrid:ReinaSofiaMuseumWalkingtour.jpg')">Museo Nacional Centro de Arte Reina Sofía</li>
+ <li class="highlight-item" onclick="focusHighlight(40.4153, -3.6845, 'El Retiro Park', 3, event, 'https://www.madridhappypeople.com/wp-content/uploads/2024/03/parque-del-retiro-00-jpg.webp')">El Retiro Park</li>
+ <li class="highlight-item" onclick="focusHighlight(40.4136, -3.6820, 'Palacio de Cristal', 3, event, 'https://www.civitatis.com/f/espana/madrid/guia/el-retiro.jpg')">Palacio de Cristal</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Casa Suecia</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-3">
+ <span class="photo-placeholder" id="placeholder-3">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-3" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-3"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 4 Panel -->
+ <div class="day-panel" id="panel-4" data-day="4">
+ <h2>Seville & Historic Heart</h2>
+ <div class="day-section">
+ <p>Travel south to Andalucia. Explore grand noble palaces, monumental gothic architecture, and vibrant traditional shopping streets.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(37.3879, -5.9904, 'Casa del Rey Sabio', 4, event, 'https://www.myboutiquehotel.com/photos/118026/casa-del-rey-sabio-seville-001-1706368025-900x570.jpg')">Casa del Rey Sabio</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3899, -5.9872, 'Casa de Pilatos', 4, event, 'https://fundacionmedinaceli.org/wp-content/uploads/2024/05/jardin-grande-tr.jpg')">Casa de Pilatos</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3858, -5.9931, 'Catedral de Sevilla', 4, event, 'https://casadelpoeta.es/wp-content/uploads/2025/10/que-ver-en-la-catedral-de-sevilla.jpg')">Catedral de Sevilla</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3890, -5.9942, 'Calle Sierpes', 4, event, 'https://www.barcelo.com/guia-turismo/wp-content/uploads/2019/04/calle-sierpes.jpg')">Calle Sierpes</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Azahar</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-4">
+ <span class="photo-placeholder" id="placeholder-4">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-4" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-4"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 5 Panel -->
+ <div class="day-panel" id="panel-5" data-day="5">
+ <h2>Seville Alcázar & Triana</h2>
+ <div class="day-section">
+ <p>Explore Mudéjar architecture at the Royal Alcázar, cross over to historic Triana ceramic workshops, and experience authentic flamenco.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(37.3839, -5.9902, 'Royal Alcázar of Seville', 5, event, 'https://dynamic-media.tacdn.com/media/photo-o/30/e4/53/62/caption.jpg?w=700&h=500&s=1')">Royal Alcázar of Seville</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3772, -5.9869, 'Plaza de España', 5, event, 'https://www.civitatis.com/f/pois/ChIJD7G2bqduEg0ROdrTdOj1Jok.jpg')">Plaza de España</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3852, -6.0035, 'Cerámica Triana', 5, event, 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/ee/96/16/ceramica-triana.jpg?w=1200&h=-1&s=1')">Cerámica Triana</li>
+ <li class="highlight-item" onclick="focusHighlight(37.3835, -6.0022, 'Tablao Flamenco Almoraima', 5, event, 'https://www.seville-trip.com/images/guides/best-flamenco-shows-seville.jpg')">Tablao Flamenco Almoraima</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Maria Trifulca</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-5">
+ <span class="photo-placeholder" id="placeholder-5">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-5" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-5"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 6 Panel -->
+ <div class="day-panel" id="panel-6" data-day="6">
+ <h2>Granada & Carrera del Darro</h2>
+ <div class="day-section">
+ <p>Journey into Granada. Wind through Moorish Albaicín streets up to Mirador de San Nicolás for sunset over the Alhambra complex.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(37.1768, -3.5890, 'Parador de Granada', 6, event, 'https://www.destinoarte.com/wp-content/uploads/2022/03/torre-parador-granada-blog.jpg')">Parador de Granada</li>
+ <li class="highlight-item" onclick="focusHighlight(37.1774, -3.5950, 'Carrera del Darro', 6, event, 'https://www.barcelo.com/guia-turismo/wp-content/uploads/2024/09/ok-carrera-del-darro.jpg')">Carrera del Darro</li>
+ <li class="highlight-item" onclick="focusHighlight(37.1812, -3.5925, 'Mirador de San Nicolás', 6, event, 'https://granadateguia.com/wp-content/uploads/2023/02/el-mirador-de-san-nicolas.jpg')">Mirador de San Nicolás</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Restaurante Las Tomasas</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-6">
+ <span class="photo-placeholder" id="placeholder-6">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-6" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-6"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 7 Panel -->
+ <div class="day-panel" id="panel-7" data-day="7">
+ <h2>Granada Alhambra & Market</h2>
+ <div class="day-section">
+ <p>Spend the day exploring the majestic Nasrid Palaces, lush Generalife gardens, Granada Cathedral, and the historic Alcaicería market bazaar.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(37.1763, -3.5991, 'Catedral de Granada', 7, event, 'https://travel.usnews.com/images/8-Granada_Cathedral-Credit_StockByM-Getty_Images.jpg')">Catedral de Granada</li>
+ <li class="highlight-item" onclick="focusHighlight(37.1758, -3.5985, 'Alcaicería Market', 7, event, 'https://travel.usnews.com/images/7-Alcaiceria-Credit_Sergey_Borisov-Getty_Images.jpg')">La Alcaicería de Granada</li>
+ <li class="highlight-item" onclick="focusHighlight(37.1770, -3.5895, 'Nasrid Palaces', 7, event, 'https://www.thatonepointofview.com/wp-content/uploads/2021/12/Alhambra-Court-of-the-Lions.jpg')">Nasrid Palaces</li>
+ <li class="highlight-item" onclick="focusHighlight(37.1775, -3.5850, 'Generalife Gardens', 7, event, 'https://cdn.kimkim.com/files/a/images/894b11252e0c5b3c4829352dc434a217b08f85e2/big-bbdcc41e16ba96e757dfe2aeea5020aa.jpg')">Generalife</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Mirador de San Miguel</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-7">
+ <span class="photo-placeholder" id="placeholder-7">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-7" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-7"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 8 Panel -->
+ <div class="day-panel" id="panel-8" data-day="8">
+ <h2>Barcelona Gothic Quarter</h2>
+ <div class="day-section">
+ <p>Arrive in Catalonia. Check in at Hotel Casa Luz, walk through medieval alleyways in the Gothic Quarter, sample local markets, and visit the Picasso Museum.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(41.3858, 2.1648, 'Hotel Casa Luz', 8, event, 'https://images.trvl-media.com/lodging/124000000/123510000/123504600/123504600/8f39bc51.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill')">Hotel Casa Luz</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3813, 2.1731, 'La Rambla', 8, event, 'https://www.locabarcelona.com/wp-content/uploads/2024/09/Las-Ramblas-Barcelona.jpg')">La Rambla</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3817, 2.1716, 'Mercat de la Boqueria', 8, event, 'https://estatics-nasia.dtibcn.cat/nasia-pro/media/2015%2C05%2Cmercat-boqueria.jpg')">Mercat de la Boqueria</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3828, 2.1767, 'Gothic Quarter', 8, event, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdvUNi2l6iF-U8jFXwDTK7WEvzDNAWOeoV_TGQnAECJcP3j3Y24TOlQejT&s=10')">Gothic Quarter</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3852, 2.1809, 'Picasso Museum', 8, event, 'https://media.timeout.com/images/106264708/image.jpg')">Picasso Museum Barcelona</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>Arcano Restaurante</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-8">
+ <span class="photo-placeholder" id="placeholder-8">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-8" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-8"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 9 Panel -->
+ <div class="day-panel" id="panel-9" data-day="9">
+ <h2>Barcelona Modernisme & Gaudí</h2>
+ <div class="day-section">
+ <p>A full day devoted to Antoni Gaudí’s modernista masterpieces across Barcelona, from Sagrada Família to Park Güell.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(41.3954, 2.1619, 'La Pedrera - Casa Milà', 9, event, 'https://media.architecturaldigest.com/photos/6864025c8515e09a9a969b1a/16:9/w_4496,h_2529,c_limit/GettyImages-1491549267.jpg')">La Pedrera - Casa Milà</li>
+ <li class="highlight-item" onclick="focusHighlight(41.4145, 2.1527, 'Park Güell', 9, event, 'https://www.bcn.travel/wp-content/uploads/park-guell-at-sunrise.jpg')">Park Güell</li>
+ <li class="highlight-item" onclick="focusHighlight(41.4036, 2.1744, 'Sagrada Família', 9, event, 'https://www.barcelonayellow.com/images/stories/Sagrada_Familia/sagrada_familia_2023_900x506px.jpg')">Sagrada Família</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3917, 2.1649, 'Casa Batlló', 9, event, 'https://travellinghan.com/wp-content/uploads/2024/06/wp-1718376812998.jpg')">Casa Batlló</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>El Nacional - La Taperia</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-9">
+ <span class="photo-placeholder" id="placeholder-9">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-9" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-9"></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Day 10 Panel -->
+ <div class="day-panel" id="panel-10" data-day="10">
+ <h2>Barcelona Montjuïc & Culture</h2>
+ <div class="day-section">
+ <p>Explore the cultural ridge of Montjuïc hill, featuring world-class art collections, iconic modernist architecture, historic venues, and sweeping city views.</p>
+ </div>
+ <div class="day-section">
+ <strong>Highlights</strong>
+ <ul>
+ <li class="highlight-item" onclick="focusHighlight(41.3633, 2.1658, 'Montjuïc Castle', 10, event, 'https://s3.eu-west-1.amazonaws.com/pro.static.portalstdo.tmb.cat/styles/galeria_slider/s3/2025-05/REF_CASTILLO_CT6A3663.jpg.webp?itok=0EWsMkgZ')">Montjuïc Castle</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3686, 2.1601, 'Fundació Joan Miró', 10, event, 'https://images.adsttc.com/media/images/5ece/84e1/b357/6516/5600/0260/large_jpg/IMG_9075.jpg?1590592726')">Fundació Joan Miró</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3683, 2.1536, 'MNAC Art Museum', 10, event, 'https://saltertonartsreview.com/wp-content/uploads/2023/11/IMG-20231123-WA0193-1.jpg')">Museu Nacional d'Art de Catalunya</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3700, 2.1500, 'Mies van de Rohe Pavilion', 10, event, 'https://www.ignant.com/wp-content/uploads/2020/02/ignant-architecture-barcelona-pavilion-ludwig-mies-van-der-rohe-maciej-jezyk-01-2880x1920.jpg')">Mies van de Rohe Pavilion</li>
+ <li class="highlight-item" onclick="focusHighlight(41.3712, 2.1517, 'Magic Fountain', 10, event, 'https://ecotuktuk.com/wp-content/uploads/sites/5706/2025/07/Gemini_Generated_Image_4heftc4heftc4hef.webp?w=1200&zoom=2')">Magic Fountains</li>
+ </ul>
+ </div>
+ <div class="day-section">
+ <strong>Dinner</strong>
+ <p>El Xalet de Montjuic</p>
+ </div>
+ <div class="photo-preview-container">
+ <div class="photo-card" id="photo-card-10">
+ <span class="photo-placeholder" id="placeholder-10">Tap any highlight above to display Google Maps photo</span>
+ <img id="img-10" src="" alt="Google Maps Listing Preview" />
+ <div class="photo-caption" id="caption-10"></div>
+ </div>
+ </div>
+ </div>
+
+ </div>
+
+ <!-- Side / Top Index Tabs -->
+ <div class="notebook-tabs" id="notebookTabs">
+ <a class="index-tab is-active-tab" data-day="1" onclick="switchDay(1, event)">Day 1</a>
+ <a class="index-tab" data-day="2" onclick="switchDay(2, event)">Day 2</a>
+ <a class="index-tab" data-day="3" onclick="switchDay(3, event)">Day 3</a>
+ <a class="index-tab" data-day="4" onclick="switchDay(4, event)">Day 4</a>
+ <a class="index-tab" data-day="5" onclick="switchDay(5, event)">Day 5</a>
+ <a class="index-tab" data-day="6" onclick="switchDay(6, event)">Day 6</a>
+ <a class="index-tab" data-day="7" onclick="switchDay(7, event)">Day 7</a>
+ <a class="index-tab" data-day="8" onclick="switchDay(8, event)">Day 8</a>
+ <a class="index-tab" data-day="9" onclick="switchDay(9, event)">Day 9</a>
+ <a class="index-tab" data-day="10" onclick="switchDay(10, event)">Day 10</a>
+ </div>
+ </div>
+ </div>
+
+ <!-- Scripts -->
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+ <script src="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.js" crossorigin=""></script>
+ <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin=""></script>
+ <script src="https://unpkg.com/esri-leaflet-vector@4.2.3/dist/esri-leaflet-vector.js" crossorigin=""></script>
+ 
+<script>
+ const OVERVIEW_BOUNDS = L.latLngBounds(
+ [36.8, -6.3], // Southwest bounds
+ [41.6, 2.6] // Northeast bounds
+ );
+ const MAP_ANIMATION_DURATION = 1.8;
+
+ const DAY_CITIES = {
+ 1: "Madrid",
+ 2: "Segovia",
+ 3: "Madrid",
+ 4: "Seville",
+ 5: "Seville",
+ 6: "Granada",
+ 7: "Granada",
+ 8: "Barcelona",
+ 9: "Barcelona",
+ 10: "Barcelona"
+ };
+
+ let currentCity = null;
+ let currentDayBaseZoom = 14;
+ let activeHighlightState = { dayNum: null, title: null, lat: null, lng: null };
+ let currentActiveDay = 1;
+ let placesService = null;
+
+ const map = L.map('map', {
+ attributionControl: false,
+ zoomControl: false,
+ dragging: true,
+ scrollWheelZoom: true,
+ doubleClickZoom: true,
+ boxZoom: true,
+ touchZoom: true,
+ keyboard: true,
+ zoomAnimation: true,
+ fadeAnimation: true
+ });
+
+ const ARCGIS_API_KEY = "AAPTa8gtZybUGLhcdxRqx-1aONg..dSzZqXjZ1AlqUvuzjUUSPkxWJqI7nbGyOYlQZRdM6cb1w4AYwG1fd1BbSc3RQJxbb0zP1_3ixQGNSibycBM51hK7xa3RvsVW6ZjEnuMq6fmq30IRUrDi10WkD2GsqlQi7QejqbKe_YGT_x7_KKmvspZwuC-1zN7Ytvad8-FPurgJbmhWfhBBa2B_ShxubdGtu_mpt8j4CBavW9Z4DRH3OVA4zDQ2BJ37KLPkbLr-GRNuIOJhwlUEWC7yeboVUQ..AT1_uaX285X7";
+
+ L.esri.Vector.vectorBasemapLayer('ArcGIS:ModernAntique', {
+ apiKey: ARCGIS_API_KEY
+ }).addTo(map);
+
+ const activeMarkersGroup = L.layerGroup().addTo(map);
+ const cityOverviewGroup = L.layerGroup().addTo(map);
+ const allMarkerObjects = [];
+
+ const CITIES = [
+ { name: "Madrid", lat: 40.4168, lng: -3.7038 },
+ { name: "Segovia", lat: 40.9481, lng: -4.1181 },
+ { name: "Seville", lat: 37.3891, lng: -5.9845 },
+ { name: "Granada", lat: 37.1773, lng: -3.5986 },
+ { name: "Barcelona", lat: 41.3879, lng: 2.1699 }
+ ];
+
+ function getPaddedOptions(maxZoom, duration) {
+ const sidebarEl = document.getElementById('itineraryWrapper');
+ let leftPad = 540;
+ let bottomPad = 50;
+ let topPad = 50;
+ let rightPad = 40;
+
+ if (sidebarEl) {
+ if (window.innerWidth <= 768) {
+ leftPad = 20;
+ rightPad = 20;
+ topPad = 20;
+ bottomPad = window.innerHeight * 0.68 + 20;
+ } else {
+ const rect = sidebarEl.getBoundingClientRect();
+ const notebookTabsWidth = 45; 
+ leftPad = rect.right + notebookTabsWidth + 100; 
+ rightPad = 40;
+ }
+ }
+ return {
+ paddingTopLeft: [leftPad, topPad],
+ paddingBottomRight: [rightPad, bottomPad],
+ maxZoom: maxZoom,
+ duration: duration || MAP_ANIMATION_DURATION,
+ animate: true,
+ easeLinearity: 0.25
+ };
+ }
+
+ function fetchGoogleMapPhoto(query, dayNum, title) {
+ const imgElem = document.getElementById(`img-${dayNum}`);
+ const placeholderElem = document.getElementById(`placeholder-${dayNum}`);
+ const captionElem = document.getElementById(`caption-${dayNum}`);
+
+ if (!imgElem || !placeholderElem || !captionElem) return;
+
+ placeholderElem.textContent = 'Fetching Google Maps listing photo...';
+ placeholderElem.style.display = 'block';
+ imgElem.style.display = 'none';
+ captionElem.style.display = 'none';
+
+ if (!window.google || !window.google.maps || !window.google.maps.places) {
+ placeholderElem.textContent = 'Google Maps API key required for live listing photos.';
+ return;
+ }
+
+ if (!placesService) {
+ placesService = new google.maps.places.PlacesService(document.createElement('div'));
+ }
+
+ const request = {
+ query: query,
+ fields: ['name', 'photos']
+ };
+
+ placesService.findPlaceFromQuery(request, (results, status) => {
+ if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].photos && results[0].photos.length > 0) {
+ const photoUrl = results[0].photos[0].getUrl({ maxWidth: 800, maxHeight: 600 });
+ imgElem.onload = () => {
+ imgElem.style.display = 'block';
+ placeholderElem.style.display = 'none';
+ captionElem.textContent = title;
+ captionElem.style.display = 'block';
+ };
+ imgElem.src = photoUrl;
+ } else {
+ placesService.textSearch({ query: query }, (srResults, srStatus) => {
+ if (srStatus === google.maps.places.PlacesServiceStatus.OK && srResults && srResults[0] && srResults[0].photos && srResults[0].photos.length > 0) {
+ const photoUrl = srResults[0].photos[0].getUrl({ maxWidth: 800, maxHeight: 600 });
+ imgElem.onload = () => {
+ imgElem.style.display = 'block';
+ placeholderElem.style.display = 'none';
+ captionElem.textContent = title;
+ captionElem.style.display = 'block';
+ };
+ imgElem.src = photoUrl;
+ } else {
+ placeholderElem.textContent = 'No photo available in Google Maps listing';
+ placeholderElem.style.display = 'block';
+ imgElem.style.display = 'none';
+ }
+ });
+ }
+ });
+ }
+
+ function addMarker(lat, lng, title, dayNum, customImgUrl) {
+ const elementId = `marker-node-${dayNum}-${allMarkerObjects.length}`;
+ const markerHtml = `
+ <div class="compact-marker-node" id="${elementId}">
+ <div class="marker-dot-pin"></div>
+ <div class="marker-pill-label">${title}</div>
+ </div>
+ `;
+
+ const icon = L.divIcon({
+ className: "custom-compact-icon",
+ iconAnchor: [8, 8],
+ iconSize: [16, 16],
+ html: markerHtml
+ });
+
+ const marker = L.marker([lat, lng], { icon: icon });
+
+ marker.on('click', (e) => {
+ if (e.originalEvent) e.originalEvent.stopPropagation();
+ focusHighlight(lat, lng, title, dayNum, null, customImgUrl);
+ });
+
+ allMarkerObjects.push({
+ marker: marker,
+ lat: lat,
+ lng: lng,
+ title: title,
+ dayNum: dayNum,
+ elementId: elementId
+ });
+ }
+
+ function renderAllMarkers() {
+ clearCityOverview();
+ activeMarkersGroup.clearLayers();
+ allMarkerObjects.forEach(item => {
+ activeMarkersGroup.addLayer(item.marker);
+ });
+ }
+
+ function renderCityOverview() {
+ activeMarkersGroup.clearLayers();
+ cityOverviewGroup.clearLayers();
+
+ const leg1MadridSegovia = [
+ [40.4065, -3.6896], [40.5100, -3.8800], [40.6300, -4.0500], [40.7500, -3.8800], [40.8400, -4.0800], [40.8900, -3.9600], [40.9481, -4.1181]
+ ];
+ cityOverviewGroup.addLayer(L.polyline(leg1MadridSegovia, { color: '#b8512e', weight: 3.5, dashArray: '6, 6', opacity: 0.9 }));
+
+ const leg2MadridSeville = [
+ [40.4065, -3.6896], [40.2350, -3.6850], [39.8900, -3.8300], [39.5200, -3.9100], [38.9861, -3.9271], [38.6873, -4.1086], [38.3500, -4.4300], [38.0300, -4.6200], [37.8882, -4.7895], [37.6900, -5.1000], [37.5200, -5.4200], [37.4200, -5.8000], [37.3923, -5.9754]
+ ];
+ cityOverviewGroup.addLayer(L.polyline(leg2MadridSeville, { color: '#b8512e', weight: 3.5, opacity: 0.85 }));
+
+ const leg3SevilleGranada = [
+ [37.3923, -5.9754], [37.3600, -5.8200], [37.3300, -5.4100], [37.2300, -5.1000], [37.2200, -4.8900], [37.0710, -4.7170], [37.0250, -4.5600], [37.1000, -4.3500], [37.1660, -4.1500], [37.1800, -3.8500], [37.1840, -3.6090]
+ ];
+ cityOverviewGroup.addLayer(L.polyline(leg3SevilleGranada, { color: '#b8512e', weight: 3.5, opacity: 0.85 }));
+
+ const leg4GranadaBarcelona = [];
+ const steps = 40;
+ const pStart = { lat: 37.1773, lng: -3.5986 };
+ const pEnd = { lat: 41.3879, lng: 2.1699 };
+ for (let i = 0; i <= steps; i++) {
+ const t = i / steps;
+ const lat = pStart.lat + (pEnd.lat - pStart.lat) * t;
+ const lng = pStart.lng + (pEnd.lng - pStart.lng) * t;
+ const archOffset = Math.sin(t * Math.PI) * 2.5; 
+ leg4GranadaBarcelona.push([lat - archOffset * 0.25, lng + archOffset]);
+ }
+ cityOverviewGroup.addLayer(L.polyline(leg4GranadaBarcelona, { color: '#b8512e', weight: 3.5, opacity: 0.85 }));
+
+ CITIES.forEach((city) => {
+ const markerHtml = `
+ <div class="compact-marker-node is-active" style="z-index: 1000;">
+ <div class="marker-dot-pin" style="background-color: var(--accent-terracotta); border: 2px solid #faf8f2; width: 18px; height: 18px;"></div>
+ </div>
+ `;
+ const icon = L.divIcon({
+ className: "custom-compact-icon",
+ iconAnchor: [9, 9],
+ iconSize: [18, 18],
+ html: markerHtml
+ });
+ cityOverviewGroup.addLayer(L.marker([city.lat, city.lng], { icon: icon }));
+ });
+ }
+
+ function clearCityOverview() {
+ cityOverviewGroup.clearLayers();
+ }
+
+ function updateMarkerStates(expandedDayNum, activeLat, activeLng) {
+ const hasSpecificSelection = (activeLat !== undefined && activeLat !== null && activeLng !== undefined && activeLng !== null);
+
+ allMarkerObjects.forEach(item => {
+ const el = document.getElementById(item.elementId);
+ if (!el) return;
+
+ const isThisDay = (expandedDayNum !== null && expandedDayNum !== undefined && item.dayNum === expandedDayNum);
+ const isOtherDay = (expandedDayNum !== null && expandedDayNum !== undefined && item.dayNum !== expandedDayNum);
+ const isSelected = hasSpecificSelection && (item.lat === activeLat && item.lng === activeLng);
+
+ el.classList.remove('is-faded', 'is-day-unselected', 'is-day-all', 'is-active');
+
+ if (isOtherDay) {
+ el.classList.add('is-faded');
+ item.marker.setZIndexOffset(100);
+ } else if (isThisDay) {
+ if (hasSpecificSelection) {
+ if (isSelected) {
+ el.classList.add('is-active');
+ item.marker.setZIndexOffset(1000);
+ } else {
+ el.classList.add('is-day-unselected');
+ item.marker.setZIndexOffset(500);
+ }
+ } else {
+ el.classList.add('is-day-all');
+ item.marker.setZIndexOffset(800);
+ }
+ } else {
+ if (hasSpecificSelection) {
+ if (isSelected) {
+ el.classList.add('is-active');
+ item.marker.setZIndexOffset(1000);
+ } else {
+ el.classList.add('is-day-unselected');
+ item.marker.setZIndexOffset(500);
+ }
+ } else {
+ el.classList.add('is-day-all');
+ item.marker.setZIndexOffset(800);
+ }
+ }
+ });
+
+ document.querySelectorAll(`.highlight-item`).forEach(el => el.classList.remove('is-selected'));
+ if (hasSpecificSelection && expandedDayNum) {
+ const panel = document.getElementById(`panel-${expandedDayNum}`);
+ if (panel) {
+ panel.querySelectorAll('.highlight-item').forEach(item => {
+ const onclickAttr = item.getAttribute('onclick') || '';
+ if (onclickAttr.includes(`'${activeHighlightState.title}'`) || onclickAttr.includes(`"${activeHighlightState.title}"`)) {
+ item.classList.add('is-selected');
+ }
+ });
+ }
+ }
+ }
+
+ let flyTimeout = null;
+
+ function focusHighlight(lat, lng, title, dayNum, event, customImgUrl = null) {
+ if (event) event.stopPropagation();
+ if (flyTimeout) clearTimeout(flyTimeout);
+
+ if (activeHighlightState.dayNum === dayNum && activeHighlightState.title === title) {
+ activeHighlightState = { dayNum: null, title: null, lat: null, lng: null };
+ 
+ const imgElem = document.getElementById(`img-${dayNum}`);
+ const placeholderElem = document.getElementById(`placeholder-${dayNum}`);
+ const captionElem = document.getElementById(`caption-${dayNum}`);
+ if (imgElem && placeholderElem && captionElem) {
+ imgElem.style.display = 'none';
+ placeholderElem.textContent = 'Tap any highlight above to display Google Maps photo';
+ placeholderElem.style.display = 'block';
+ captionElem.style.display = 'none';
+ }
+
+ const dayItems = allMarkerObjects.filter(item => item.dayNum === dayNum);
+ if (dayItems.length > 0) {
+ const dayBounds = L.latLngBounds(dayItems.map(item => [item.lat, item.lng]));
+ map.flyToBounds(dayBounds, getPaddedOptions(14, MAP_ANIMATION_DURATION));
+ }
+ updateMarkerStates(dayNum, null, null);
+ return;
+ }
+
+ if (currentActiveDay !== dayNum) {
+ switchDay(dayNum, null, true);
+ }
+
+ activeHighlightState = { dayNum, title, lat, lng };
+
+ const targetCity = DAY_CITIES[dayNum];
+ const duration = MAP_ANIMATION_DURATION;
+ currentCity = targetCity;
+
+ const highlightZoom = (currentDayBaseZoom ? Math.min(currentDayBaseZoom + 0.625, 16) : 15);
+ map.flyToBounds(L.latLngBounds([[lat, lng], [lat, lng]]), getPaddedOptions(highlightZoom, duration));
+
+ if (customImgUrl) {
+ const imgElem = document.getElementById(`img-${dayNum}`);
+ const placeholderElem = document.getElementById(`placeholder-${dayNum}`);
+ const captionElem = document.getElementById(`caption-${dayNum}`);
+
+ if (imgElem && placeholderElem && captionElem) {
+ placeholderElem.textContent = 'Loading custom photo...';
+ placeholderElem.style.display = 'block';
+ imgElem.style.display = 'none';
+ captionElem.style.display = 'none';
+
+ imgElem.onload = () => {
+ imgElem.style.display = 'block';
+ placeholderElem.style.display = 'none';
+ captionElem.textContent = title;
+ captionElem.style.display = 'block';
+ };
+ imgElem.src = customImgUrl;
+ }
+ } else {
+ fetchGoogleMapPhoto(`${title} ${targetCity}`, dayNum, title);
+ }
+
+ updateMarkerStates(dayNum, lat, lng);
+ }
+
+ document.querySelectorAll('.highlight-item').forEach(item => {
+ const onclickText = item.getAttribute('onclick');
+ if (onclickText) {
+ const params = onclickText.match(/focusHighlight\(([\d.-]+),\s*([\d.-]+),\s*(["'`])(.*?)\3,\s*(\d+)(?:,\s*event,\s*(["'`])(.*?)\6)?/);
+ if (params) {
+ addMarker(parseFloat(params[1]), parseFloat(params[2]), params[4], parseInt(params[5]), params[7]);
+ }
+ }
+ });
+
+ const itineraryWrapper = document.getElementById('itineraryWrapper');
+ const overlayHeader = document.getElementById('overlayHeader');
+
+ function switchDay(dayNum, event, skipFly = false) {
+ if (event) event.stopPropagation();
+
+ if (itineraryWrapper.classList.contains('is-hero')) {
+ itineraryWrapper.classList.remove('is-hero');
+ itineraryWrapper.classList.add('collapsed');
+ }
+
+ currentActiveDay = dayNum;
+ activeHighlightState = { dayNum: null, title: null, lat: null, lng: null };
+
+ for (let i = 1; i <= 10; i++) {
+ const panel = document.getElementById(`panel-${i}`);
+ if (panel) {
+ if (i === dayNum) panel.classList.add('is-active');
+ else panel.classList.remove('is-active');
+ }
+ }
+
+ document.querySelectorAll('.index-tab').forEach(tab => {
+ if (parseInt(tab.getAttribute('data-day')) === dayNum) {
+ tab.classList.add('is-active-tab');
+ } else {
+ tab.classList.remove('is-active-tab');
+ }
+ });
+
+ renderAllMarkers();
+ updateMarkerStates(dayNum, null, null);
+
+ const dayItems = allMarkerObjects.filter(item => item.dayNum === dayNum);
+ if (!skipFly && dayItems.length > 0) {
+ const dayBounds = L.latLngBounds(dayItems.map(item => [item.lat, item.lng]));
+ const opts = getPaddedOptions(14, MAP_ANIMATION_DURATION);
+
+ const padPoint = L.point(opts.paddingTopLeft[0] + opts.paddingBottomRight[0], opts.paddingTopLeft[1] + opts.paddingBottomRight[1]);
+ let calculatedZoom = map.getBoundsZoom(dayBounds, false, padPoint);
+ if (calculatedZoom > 14) calculatedZoom = 14;
+ currentDayBaseZoom = calculatedZoom;
+
+ map.flyToBounds(dayBounds, opts);
+ }
+ }
+
+ function enterItineraryView() {
+ itineraryWrapper.classList.remove('is-hero');
+ itineraryWrapper.classList.add('collapsed');
+
+ switchDay(1);
+ }
+
+ function restoreInitialLaunchState() {
+ itineraryWrapper.classList.remove('collapsed');
+ itineraryWrapper.classList.add('is-hero');
+
+ renderCityOverview();
+ map.flyToBounds(OVERVIEW_BOUNDS, getPaddedOptions(6.6, MAP_ANIMATION_DURATION));
+ }
+
+ overlayHeader.addEventListener('click', (event) => {
+ event.stopPropagation();
+ if (itineraryWrapper.classList.contains('is-hero')) {
+ enterItineraryView();
+ } else {
+ restoreInitialLaunchState();
+ }
+ });
+
+ window.addEventListener('resize', () => {
+ if (map) {
+ map.invalidateSize();
+ }
+ });
+
+ // Initialize map overview once ready
+ renderCityOverview();
+ map.setView([39.2, -3.5], 6.5);
+ map.whenReady(() => {
+ map.flyToBounds(OVERVIEW_BOUNDS, getPaddedOptions(6.6, 0.1));
+ });
+ </script>
+</body>
+</html>
