@@ -274,7 +274,6 @@
  text-align: center;
  }
 
- /* --- DAY 10 GRID SPACING ALIGNMENT --- */
  #panel-10 h2 {
  margin-bottom: 28px !important;
  }
@@ -355,11 +354,8 @@
  border-top: 1px dashed var(--notebook-border);
  display: flex;
  flex-direction: column;
- flex: 1;
- transition: opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
- overflow: hidden;
- align-items: center;
  width: 100%;
+ box-sizing: border-box;
  }
 
  .photo-card {
@@ -368,20 +364,20 @@
  border-radius: 8px;
  overflow: hidden;
  text-align: center;
- flex: 1;
  width: 100%;
- max-width: none;
- margin-left: 0;
- margin-right: 0;
+ height: 180px;
+ position: relative;
  display: flex;
  flex-direction: column;
  justify-content: center;
  align-items: center;
- position: relative;
- min-height: 160px;
+ box-sizing: border-box;
  }
 
  .photo-card img {
+ position: absolute;
+ top: 0;
+ left: 0;
  width: 100%;
  height: 100%;
  object-fit: cover;
@@ -394,6 +390,7 @@
  color: var(--text-muted);
  padding: 10px;
  font-style: italic;
+ z-index: 2;
  }
 
  .photo-caption {
@@ -411,17 +408,7 @@
  bottom: 0;
  left: 0;
  letter-spacing: 0.5px;
- }
-
- @media (max-height: 780px) {
- .photo-preview-container {
- max-height: 0;
- opacity: 0;
- padding-top: 0;
- margin-top: 0;
- border-top: none;
- pointer-events: none;
- }
+ z-index: 3;
  }
 
  .notebook-tabs {
@@ -754,8 +741,25 @@
  padding: 0;
  }
 
- .photo-preview-container {
+ /* Mobile photo preview behavior and compact height to prevent bottom overflow */
+ .day-panel .photo-preview-container {
  display: none !important;
+ }
+
+ .day-panel.has-selected-highlight .day-narrative,
+ .day-panel.has-selected-highlight .day-dinner {
+ display: none !important;
+ }
+
+ .day-panel.has-selected-highlight .photo-preview-container {
+ display: flex !important;
+ margin-top: 8px;
+ padding-top: 4px;
+ border-top: 1px dashed var(--notebook-border);
+ }
+
+ .photo-card {
+ height: 160px !important;
  }
  
  .notebook-tabs {
@@ -805,10 +809,10 @@
  <!-- Day 1 Panel -->
  <div class="day-panel is-active" id="panel-1" data-day="1">
  <h2>Madrid Arrival & Historic Core</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Arrive in Madrid, check in, and spend a relaxing afternoon adjusting to Spanish time while exploring the vibrant historic core.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(40.4169, -3.7033, 'Puerta del Sol', 1, event, 'https://cdn.sanity.io/images/nxpteyfv/goguides/c1c87b4faaf483c3c3a66a2de9cfc318c959fbd1-1600x1067.jpg')">Puerta del Sol</li>
@@ -817,7 +821,7 @@
  <li class="highlight-item" onclick="focusHighlight(40.4138, -3.6921, 'Museo Nacional del Prado', 1, event, 'https://travel.usnews.com/images/Courtesy_of_Museo_Nacional_del_Pradomuseum-inside-exhibit-art.jpg')">Museo Nacional del Prado</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Casa Mortero</p>
  </div>
@@ -833,10 +837,10 @@
  <!-- Day 2 Panel -->
  <div class="day-panel" id="panel-2" data-day="2">
  <h2>Segovia Day Trip</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>A day trip north to Segovia via high-speed rail through the Guadarrama Tunnels to marvel at the Roman aqueduct, explore the fairy-tale Alcázar, and enjoy traditional castilian roast suckling pig.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(40.9481, -4.1181, 'Segovia Aqueduct', 2, event, 'https://media.cntraveler.com/photos/5cf00b6bd3381d773567db0c/16:9/w_2560,c_limit/Aqueduct%20of%20Segovia_GettyImages-1131634877.jpg')">Segovia Aqueduct</li>
@@ -845,7 +849,7 @@
  <li class="highlight-item" onclick="focusHighlight(40.9503, -4.1240, 'El Horno de Segovia', 2, event, 'https://hips.hearstapps.com/hmg-prod/images/asador-maribel-cochinillo-horno-segovia-elle-gourmet-6638c0d149bf3.jpg')">El Horno de Segovia</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Restaurante La Bien Aparecida</p>
  </div>
@@ -861,10 +865,10 @@
  <!-- Day 3 Panel -->
  <div class="day-panel" id="panel-3" data-day="3">
  <h2>Madrid Fine Arts & Parks</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Immerse in world-class art at Reina Sofía before strolling through the lush gardens and iconic Crystal Palace in El Retiro Park.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(40.4082, -3.6944, 'Reina Sofía Museum', 3, event, 'https://res.klook.com/images/fl_lossy.progressive,q_65/c_fill,w_1295,h_971/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/fdxaqbx3u0unfrdtih4i/Madrid:ReinaSofiaMuseumWalkingtour.jpg')">Museo Nacional Centro de Arte Reina Sofía</li>
@@ -872,7 +876,7 @@
  <li class="highlight-item" onclick="focusHighlight(40.4136, -3.6820, 'Palacio de Cristal', 3, event, 'https://www.civitatis.com/f/espana/madrid/guia/el-retiro.jpg')">Palacio de Cristal</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Casa Suecia</p>
  </div>
@@ -888,10 +892,10 @@
  <!-- Day 4 Panel -->
  <div class="day-panel" id="panel-4" data-day="4">
  <h2>Seville & Historic Heart</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Travel south to Andalucia. Explore grand noble palaces, monumental gothic architecture, and vibrant traditional shopping streets.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(37.3879, -5.9904, 'Casa del Rey Sabio', 4, event, 'https://www.myboutiquehotel.com/photos/118026/casa-del-rey-sabio-seville-001-1706368025-900x570.jpg')">Casa del Rey Sabio</li>
@@ -900,7 +904,7 @@
  <li class="highlight-item" onclick="focusHighlight(37.3890, -5.9942, 'Calle Sierpes', 4, event, 'https://www.barcelo.com/guia-turismo/wp-content/uploads/2019/04/calle-sierpes.jpg')">Calle Sierpes</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Azahar</p>
  </div>
@@ -916,10 +920,10 @@
  <!-- Day 5 Panel -->
  <div class="day-panel" id="panel-5" data-day="5">
  <h2>Seville Alcázar & Triana</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Explore Mudéjar architecture at the Royal Alcázar, cross over to historic Triana ceramic workshops, and experience authentic flamenco.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(37.3839, -5.9902, 'Royal Alcázar of Seville', 5, event, 'https://dynamic-media.tacdn.com/media/photo-o/30/e4/53/62/caption.jpg?w=700&h=500&s=1')">Royal Alcázar of Seville</li>
@@ -928,7 +932,7 @@
  <li class="highlight-item" onclick="focusHighlight(37.3835, -6.0022, 'Tablao Flamenco Almoraima', 5, event, 'https://www.seville-trip.com/images/guides/best-flamenco-shows-seville.jpg')">Tablao Flamenco Almoraima</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Maria Trifulca</p>
  </div>
@@ -944,10 +948,10 @@
  <!-- Day 6 Panel -->
  <div class="day-panel" id="panel-6" data-day="6">
  <h2>Granada & Carrera del Darro</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Journey into Granada. Wind through Moorish Albaicín streets up to Mirador de San Nicolás for sunset over the Alhambra complex.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(37.1768, -3.5890, 'Parador de Granada', 6, event, 'https://www.destinoarte.com/wp-content/uploads/2022/03/torre-parador-granada-blog.jpg')">Parador de Granada</li>
@@ -955,7 +959,7 @@
  <li class="highlight-item" onclick="focusHighlight(37.1812, -3.5925, 'Mirador de San Nicolás', 6, event, 'https://granadateguia.com/wp-content/uploads/2023/02/el-mirador-de-san-nicolas.jpg')">Mirador de San Nicolás</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Restaurante Las Tomasas</p>
  </div>
@@ -971,10 +975,10 @@
  <!-- Day 7 Panel -->
  <div class="day-panel" id="panel-7" data-day="7">
  <h2>Granada Alhambra & Market</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Spend the day exploring the majestic Nasrid Palaces, lush Generalife gardens, Granada Cathedral, and the historic Alcaicería market bazaar.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(37.1763, -3.5991, 'Catedral de Granada', 7, event, 'https://travel.usnews.com/images/8-Granada_Cathedral-Credit_StockByM-Getty_Images.jpg')">Catedral de Granada</li>
@@ -983,7 +987,7 @@
  <li class="highlight-item" onclick="focusHighlight(37.1775, -3.5850, 'Generalife Gardens', 7, event, 'https://cdn.kimkim.com/files/a/images/894b11252e0c5b3c4829352dc434a217b08f85e2/big-bbdcc41e16ba96e757dfe2aeea5020aa.jpg')">Generalife</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Mirador de San Miguel</p>
  </div>
@@ -999,10 +1003,10 @@
  <!-- Day 8 Panel -->
  <div class="day-panel" id="panel-8" data-day="8">
  <h2>Barcelona Gothic Quarter</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Arrive in Catalonia. Check in at Hotel Casa Luz, walk through medieval alleyways in the Gothic Quarter, sample local markets, and visit the Picasso Museum.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(41.3858, 2.1648, 'Hotel Casa Luz', 8, event, 'https://images.trvl-media.com/lodging/124000000/123510000/123504600/123504600/8f39bc51.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill')">Hotel Casa Luz</li>
@@ -1012,7 +1016,7 @@
  <li class="highlight-item" onclick="focusHighlight(41.3852, 2.1809, 'Picasso Museum', 8, event, 'https://media.timeout.com/images/106264708/image.jpg')">Picasso Museum Barcelona</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>Arcano Restaurante</p>
  </div>
@@ -1028,10 +1032,10 @@
  <!-- Day 9 Panel -->
  <div class="day-panel" id="panel-9" data-day="9">
  <h2>Barcelona Modernisme & Gaudí</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>A full day devoted to Antoni Gaudí’s modernista masterpieces across Barcelona, from Sagrada Família to Park Güell.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(41.3954, 2.1619, 'La Pedrera - Casa Milà', 9, event, 'https://media.architecturaldigest.com/photos/6864025c8515e09a9a969b1a/16:9/w_4496,h_2529,c_limit/GettyImages-1491549267.jpg')">La Pedrera - Casa Milà</li>
@@ -1040,7 +1044,7 @@
  <li class="highlight-item" onclick="focusHighlight(41.3917, 2.1649, 'Casa Batlló', 9, event, 'https://travellinghan.com/wp-content/uploads/2024/06/wp-1718376812998.jpg')">Casa Batlló</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>El Nacional - La Taperia</p>
  </div>
@@ -1056,10 +1060,10 @@
  <!-- Day 10 Panel -->
  <div class="day-panel" id="panel-10" data-day="10">
  <h2>Barcelona Montjuïc & Culture</h2>
- <div class="day-section">
+ <div class="day-section day-narrative">
  <p>Explore the cultural ridge of Montjuïc hill, featuring world-class art collections, iconic modernist architecture, historic venues, and sweeping city views.</p>
  </div>
- <div class="day-section">
+ <div class="day-section day-highlights">
  <strong>Highlights</strong>
  <ul>
  <li class="highlight-item" onclick="focusHighlight(41.3633, 2.1658, 'Montjuïc Castle', 10, event, 'https://s3.eu-west-1.amazonaws.com/pro.static.portalstdo.tmb.cat/styles/galeria_slider/s3/2025-05/REF_CASTILLO_CT6A3663.jpg.webp?itok=0EWsMkgZ')">Montjuïc Castle</li>
@@ -1069,7 +1073,7 @@
  <li class="highlight-item" onclick="focusHighlight(41.3712, 2.1517, 'Magic Fountain', 10, event, 'https://ecotuktuk.com/wp-content/uploads/sites/5706/2025/07/Gemini_Generated_Image_4heftc4heftc4hef.webp?w=1200&zoom=2')">Magic Fountains</li>
  </ul>
  </div>
- <div class="day-section">
+ <div class="day-section day-dinner">
  <strong>Dinner</strong>
  <p>El Xalet de Montjuic</p>
  </div>
@@ -1408,6 +1412,8 @@
  if (event) event.stopPropagation();
  if (flyTimeout) clearTimeout(flyTimeout);
 
+ document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('has-selected-highlight'));
+
  if (activeHighlightState.dayNum === dayNum && activeHighlightState.title === title) {
  activeHighlightState = { dayNum: null, title: null, lat: null, lng: null };
  
@@ -1436,6 +1442,11 @@
 
  activeHighlightState = { dayNum, title, lat, lng };
 
+ const activePanel = document.getElementById(`panel-${dayNum}`);
+ if (activePanel) {
+ activePanel.classList.add('has-selected-highlight');
+ }
+
  const targetCity = DAY_CITIES[dayNum];
  const duration = MAP_ANIMATION_DURATION;
  currentCity = targetCity;
@@ -1449,7 +1460,7 @@
  const captionElem = document.getElementById(`caption-${dayNum}`);
 
  if (imgElem && placeholderElem && captionElem) {
- placeholderElem.textContent = 'Loading custom photo...';
+ placeholderElem.textContent = 'Loading photo...';
  placeholderElem.style.display = 'block';
  imgElem.style.display = 'none';
  captionElem.style.display = 'none';
@@ -1492,6 +1503,8 @@
 
  currentActiveDay = dayNum;
  activeHighlightState = { dayNum: null, title: null, lat: null, lng: null };
+
+ document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('has-selected-highlight'));
 
  for (let i = 1; i <= 10; i++) {
  const panel = document.getElementById(`panel-${i}`);
@@ -1556,7 +1569,6 @@
  }
  });
 
- // Initialize map overview once ready
  renderCityOverview();
  map.setView([39.2, -3.5], 6.5);
  map.whenReady(() => {
